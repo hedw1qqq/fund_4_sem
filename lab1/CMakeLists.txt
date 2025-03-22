@@ -23,6 +23,8 @@ FetchContent_MakeAvailable(googletest)
 # Добавляем поддиректорию task1
 add_subdirectory(task1)
 add_subdirectory(task2)
+add_subdirectory(task5)
+add_subdirectory(task6)
 # Проверяем наличие инструментов покрытия кода
 find_program(LCOV lcov)
 find_program(GENHTML genhtml)

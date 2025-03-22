@@ -1,4 +1,4 @@
 #include <gtest/gtest.h>
-#include "../include/Array.h"
+#include "../include/List.h"
 #include <string>
 #include <stdexcept>

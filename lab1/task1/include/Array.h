@@ -44,7 +44,7 @@ class Array final : public Container<T> {
 
 	Array(Array&& other) noexcept { std::copy_n(other.elems, N, elems); }
 
-	Array<T, N>& operator=(const Array& other) {
+	Array& operator=(const Array& other) {
 		if (this != &other) {
 			std::copy_n(other.elems, N, elems);
 		}
