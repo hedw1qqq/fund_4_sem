@@ -7,14 +7,13 @@
 #include "Container.h"
 
 namespace my_container {
+
 template <typename T>
 struct Node {
 	T data;
 	Node *prev;
 	Node *next;
-
 	explicit Node(const T &value, Node *prev = nullptr, Node *next = nullptr) : data(value), prev(prev), next(next) {}
-
 	explicit Node(Node *prev = nullptr, Node *next = nullptr) : data(T()), prev(prev), next(next) {}
 };
 
@@ -37,33 +36,26 @@ class List final : public Container<T> {
 		using difference_type = std::ptrdiff_t;
 		using pointer = T *;
 		using reference = T &;
-
 		explicit iterator(Node<T> *node) : current(node) {}
-
 		T &operator*() { return current->data; }
-
 		iterator &operator++() {
 			current = current->next;
 			return *this;
 		}
-
 		iterator operator++(int) {
 			iterator temp(*this);
 			current = current->next;
 			return temp;
 		}
-
 		iterator &operator--() {
 			current = current->prev;
 			return *this;
 		}
-
 		iterator operator--(int) {
 			iterator temp(*this);
 			current = current->prev;
 			return temp;
 		}
-
 		bool operator==(const iterator &other) const { return current == other.current; }
 		bool operator!=(const iterator &other) const { return current != other.current; }
 	};
@@ -79,33 +71,26 @@ class List final : public Container<T> {
 		using difference_type = std::ptrdiff_t;
 		using pointer = const T *;
 		using reference = const T &;
-
 		explicit const_iterator(const Node<T> *node) : current(node) {}
-
 		const T &operator*() const { return current->data; }
-
 		const_iterator &operator++() {
 			current = current->next;
 			return *this;
 		}
-
 		const_iterator operator++(int) {
 			const_iterator temp(*this);
 			current = current->next;
 			return temp;
 		}
-
 		const_iterator &operator--() {
 			current = current->prev;
 			return *this;
 		}
-
 		const_iterator operator--(int) {
 			const_iterator temp(*this);
 			current = current->prev;
 			return temp;
 		}
-
 		bool operator==(const const_iterator &other) const { return current == other.current; }
 		bool operator!=(const const_iterator &other) const { return current != other.current; }
 	};
@@ -173,21 +158,18 @@ class List final : public Container<T> {
 		}
 		return head->next->data;
 	}
-
 	const T &front() const {
 		if (empty()) {
 			throw std::out_of_range("List is empty");
 		}
 		return head->next->data;
 	}
-
 	T &back() {
 		if (empty()) {
 			throw std::out_of_range("List is empty");
 		}
 		return tail->prev->data;
 	}
-
 	const T &back() const {
 		if (empty()) {
 			throw std::out_of_range("List is empty");
@@ -243,8 +225,7 @@ class List final : public Container<T> {
 
 	void pop_back() { erase(--end()); }
 
-	void pop_front() { erase(begin()); }
-
+	void pop_front() { erase(begin());}
 	iterator insert(iterator pos, const T &value) {
 		if (pos.current == head) {
 			throw std::out_of_range("insert at invalid position");
@@ -256,7 +237,6 @@ class List final : public Container<T> {
 		++count;
 		return iterator(newNode);
 	}
-
 	iterator insert(iterator pos, T &&value) {
 		if (pos.current == head) {
 			throw std::out_of_range("insert at invalid position");
@@ -267,13 +247,6 @@ class List final : public Container<T> {
 		pos.current->prev = newNode;
 		++count;
 		return iterator(newNode);
-	}
-	iterator insert(iterator pos, std::initializer_list<T> ilist) {
-		for (const T &value : ilist) {
-			pos = insert(pos, value);
-			++pos;
-		}
-		return pos;
 	}
 
 	iterator erase(iterator pos) {
@@ -288,12 +261,11 @@ class List final : public Container<T> {
 		--count;
 		return nextIter;
 	}
-
 	iterator erase(const_iterator pos) {
 		if (count == 0 || pos.current == tail) {
 			throw std::out_of_range("erase at invalid position");
 		}
-		auto *toDelete = const_cast<Node<T> *>(pos.current);
+		Node<T> *toDelete = const_cast<Node<T> *>(pos.current);
 		iterator nextIter(toDelete->next);
 		toDelete->prev->next = toDelete->next;
 		toDelete->next->prev = toDelete->prev;
@@ -301,22 +273,18 @@ class List final : public Container<T> {
 		--count;
 		return nextIter;
 	}
-
 	iterator erase(iterator first, iterator last) {
 		while (first != last) {
 			first = erase(first);
 		}
 		return last;
 	}
-
 	iterator erase(const_iterator first, const_iterator last) {
-		iterator it = iterator(const_cast<Node<T> *>(first.current));
-		while (it != iterator(const_cast<Node<T> *>(last.current))) {
-			it = erase(it);
+		while (first != last) {
+			first = erase(first);
 		}
-		return it;
+		return iterator(first.current);
 	}
-
 	bool operator==(const Container<T> &other) const override {
 		const List<T> *otherList = dynamic_cast<const List<T> *>(&other);
 		if (!otherList) {
@@ -327,8 +295,9 @@ class List final : public Container<T> {
 		}
 		return std::equal(this->begin(), this->end(), otherList->begin());
 	}
-
-	bool operator!=(const Container<T> &other) const override { return !(*this == other); }
+  bool operator!=(const Container<T> &other) const override {
+	  return !(*this == other);
+	}
 
 	bool operator==(const List &other) const { return ((*this <=> other) == std::strong_ordering::equal); }
 
@@ -346,6 +315,7 @@ class List final : public Container<T> {
 		return std::lexicographical_compare_three_way(this->cbegin(), this->cend(), other.cbegin(), other.cend());
 	}
 };
+
 }  // namespace my_container
 
 #endif  // LIST_H

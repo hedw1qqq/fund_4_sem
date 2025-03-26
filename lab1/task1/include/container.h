@@ -2,7 +2,7 @@
 #define LAB1_CONTAINER_H
 
 #include <cstddef>
-#include <iostream>
+
 template <typename T>
 class Container {
 public:
@@ -15,12 +15,12 @@ public:
 	using difference_type = std::ptrdiff_t;
 
 	Container() = default;
-	Container(const Container<T>& other) = default;
-	Container<T>& operator=(const Container<T>& other) = default;
+	Container(const Container& other) = default;
+	Container& operator=(const Container& other) = default;
 	virtual ~Container() = default;
 
-	virtual bool operator==(const Container<T>& other) const = 0;
-	virtual bool operator!=(const Container<T>& other) const = 0;
+	virtual bool operator==(const Container& other) const = default;
+	virtual bool operator!=(const Container& other) const = default;
 
 	virtual size_type size() const = 0;
 	virtual size_type max_size() const = 0;
