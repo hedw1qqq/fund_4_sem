@@ -53,7 +53,7 @@ target_link_options(my_lib PRIVATE
 )
 
 
-add_executable(tests tests/list_test.cpp)
+add_executable(tests tests/deque_test.cpp)
 target_link_libraries(tests PRIVATE my_lib GTest::gtest_main asan)
 target_compile_options(tests PRIVATE
         ${COMMON_FLAGS}
