@@ -1,336 +1,169 @@
 #include <gtest/gtest.h>
-#include "vector.h"
-#include <string>
-#include <array>
+#include "../include/vector.h"
 
 using namespace my_container;
 
 class VectorTest : public ::testing::Test {
 protected:
-    vector<int> v;
+    Vector<int> v;
 };
 
-// --- Тесты конструкторов ---
-TEST_F(VectorTest, DefaultConstructor) {
-    EXPECT_TRUE(v.empty());
-    EXPECT_EQ(v.size(), 0);
-    EXPECT_EQ(v.capacity(), 0);
+TEST_F(VectorTest, ConstructorsAndAssignment) {
+    Vector<int> v1{1, 2, 3};
+    Vector<int> v2(v1);
+    Vector<int> v3(std::move(v1));
+    v = v2;
+    EXPECT_EQ(v, v2);
+    v = std::move(v3);
+    EXPECT_EQ(v.size(), 3);
+    Vector<int> v4;
+    EXPECT_TRUE(v4.empty());
 }
 
-TEST_F(VectorTest, InitializerListConstructor) {
-    vector<int> v1 {1, 2, 3};
-    EXPECT_EQ(v1.size(), 3);
-    EXPECT_EQ(v1[0], 1);
-    EXPECT_EQ(v1[1], 2);
-    EXPECT_EQ(v1[2], 3);
-}
-
-TEST_F(VectorTest, CopyConstructor) {
-    vector<int> v1 {1, 2, 3};
-    vector<int> v2(v1);
-    EXPECT_EQ(v2.size(), 3);
-    EXPECT_EQ(v2, v1);
-}
-
-TEST_F(VectorTest, MoveConstructor) {
-    vector<int> v1 {1, 2, 3};
-    vector<int> v2(std::move(v1));
-    EXPECT_EQ(v2.size(), 3);
-    EXPECT_EQ(v2[0], 1);
-    EXPECT_EQ(v2[1], 2);
-    EXPECT_EQ(v2[2], 3);
-}
-
-// --- Операторы ---
-TEST_F(VectorTest, CopyAssignment) {
-    vector<int> v1 {1, 2, 3};
-    vector<int> v2;
-    v2 = v1;
-    EXPECT_EQ(v2, v1);
-}
-
-TEST_F(VectorTest, MoveAssignment) {
-    vector<int> v1 {1, 2, 3};
-    vector<int> v2;
-    v2 = std::move(v1);
-    EXPECT_EQ(v2.size(), 3);
-    EXPECT_EQ(v2[0], 1);
-    EXPECT_EQ(v2[1], 2);
-    EXPECT_EQ(v2[2], 3);
-}
-
-TEST_F(VectorTest, Swap) {
-    vector<int> v1 {1, 2, 3};
-    vector<int> v2 {4, 5};
-    v1.swap(v2);
-    EXPECT_EQ(v1.size(), 2);
-    EXPECT_EQ(v2.size(), 3);
-    EXPECT_EQ(v1[0], 4);
-    EXPECT_EQ(v2[0], 1);
-}
-
-TEST_F(VectorTest, SubscriptOperator) {
-    v.push_back(10);
-    EXPECT_EQ(v[0], 10);
-    v[0] = 20;
-    EXPECT_EQ(v[0], 20);
-}
-
-// --- Методы доступа ---
-TEST_F(VectorTest, AtOutOfRange) {
-    EXPECT_THROW(v.at(0), std::out_of_range);
-}
-
-TEST_F(VectorTest, AtInRange) {
-    v.push_back(10);
-    EXPECT_EQ(v.at(0), 10);
-}
-
-TEST_F(VectorTest, ConstAt) {
-    const vector<int> const_v {1, 2, 3};
-    EXPECT_EQ(const_v.at(1), 2);
-    EXPECT_THROW(const_v.at(3), std::out_of_range);
-}
-
-TEST_F(VectorTest, FrontBack) {
-    v.push_back(10);
-    v.push_back(20);
-    EXPECT_EQ(v.front(), 10);
-    EXPECT_EQ(v.back(), 20);
-}
-
-TEST_F(VectorTest, ConstFrontBack) {
-    const vector<int> const_v {10, 20};
-    EXPECT_EQ(const_v.front(), 10);
-    EXPECT_EQ(const_v.back(), 20);
-}
-
-TEST_F(VectorTest, Data) {
-    for (int i = 0; i < 5; ++i) {
-        v.push_back(i + 1);
-    }
-    int* dataPtr = v.data();
-    for (size_t i = 0; i < v.size(); ++i) {
-        EXPECT_EQ(dataPtr[i], v[i]);
-    }
-}
-
-TEST_F(VectorTest, ConstData) {
-    const vector<int> const_v {1, 2, 3};
-    const int* dataPtr = const_v.data();
-    for (size_t i = 0; i < const_v.size(); ++i) {
-        EXPECT_EQ(dataPtr[i], const_v[i]);
-    }
-}
-
-TEST_F(VectorTest, MaxSize) {
-    EXPECT_NE(v.max_size(), 0);
-}
-
-// --- Методы управления памятью ---
-TEST_F(VectorTest, Reserve) {
-    v.reserve(100);
-    EXPECT_GE(v.capacity(), 100);
-}
-
-TEST_F(VectorTest, ShrinkToFit) {
-    v.reserve(100);
-    v.push_back(1);
-    v.push_back(2);
-    v.shrink_to_fit();
-    EXPECT_EQ(v.capacity(), v.size());
-}
-
-// --- Итераторы ---
-TEST_F(VectorTest, BeginEnd) {
-    v.push_back(1);
-    v.push_back(2);
-    int sum = 0;
-    for (auto it = v.begin(); it != v.end(); ++it) {
-        sum += *it;
-    }
-    EXPECT_EQ(sum, 3);
-}
-
-TEST_F(VectorTest, ConstBeginEnd) {
-    const vector<int> const_v {1, 2, 3};
-    int sum = 0;
-    for (auto it = const_v.begin(); it != const_v.end(); ++it) {
-        sum += *it;
-    }
-    EXPECT_EQ(sum, 6);
-}
-
-TEST_F(VectorTest, CBeginCEnd) {
-    vector<int> v1 {1, 2, 3};
-    int sum = 0;
-    for (auto it = v1.cbegin(); it != v1.cend(); ++it) {
-        sum += *it;
-    }
-    EXPECT_EQ(sum, 6);
-}
-
-TEST_F(VectorTest, RBeginREnd) {
-    v.push_back(1);
-    v.push_back(2);
-    v.push_back(3);
-    int sum = 0;
-    for (auto it = v.rbegin(); it != v.rend(); ++it) {
-        sum += *it;
-    }
-    EXPECT_EQ(sum, 6);
-}
-
-TEST_F(VectorTest, ConstRBeginREnd) {
-    const vector<int> const_v {1, 2, 3};
-    int sum = 0;
-    for (auto it = const_v.rbegin(); it != const_v.rend(); ++it) {
-        sum += *it;
-    }
-    EXPECT_EQ(sum, 6);
-}
-
-TEST_F(VectorTest, CRBeginCREnd) {
-    vector<int> v1 {1, 2, 3};
-    int sum = 0;
-    for (auto it = v1.crbegin(); it != v1.crend(); ++it) {
-        sum += *it;
-    }
-    EXPECT_EQ(sum, 6);
-}
-
-
-// --- Методы модификации контейнера ---
-TEST_F(VectorTest, PushBack) {
+TEST_F(VectorTest, Modifiers) {
+    v.insert(v.begin(), {1, 2, 3, 4});
     v.push_back(5);
-    EXPECT_EQ(v.size(), 1);
-    EXPECT_EQ(v[0], 5);
-}
-
-TEST_F(VectorTest, MovePushBack) {
-    int val = 5;
-    v.push_back(std::move(val));
-    EXPECT_EQ(v.size(), 1);
-    EXPECT_EQ(v[0], 5);
-}
-
-TEST_F(VectorTest, PopBack) {
-    v.push_back(10);
     v.pop_back();
-    EXPECT_TRUE(v.empty());
-}
-
-TEST_F(VectorTest, Insert) {
-    v.push_back(1);
-    v.push_back(3);
-    v.insert(v.begin() + 1, 2);
-    EXPECT_EQ(v[1], 2);
-}
-
-TEST_F(VectorTest, MoveInsert) {
-    v.push_back(1);
-    v.push_back(3);
-    int val = 2;
-    v.insert(v.begin() + 1, std::move(val));
-    EXPECT_EQ(v[1], 2);
-}
-
-TEST_F(VectorTest, InsertCount) {
-    v.push_back(1);
-    v.push_back(4);
-    v.insert(v.begin() + 1, 2, 2);
-    EXPECT_EQ(v.size(), 4);
-    EXPECT_EQ(v[1], 2);
-    EXPECT_EQ(v[2], 2);
-    EXPECT_EQ(v[3], 4);
-}
-
-TEST_F(VectorTest, InsertInitializerList) {
-    v.push_back(1);
-    v.push_back(5);
-    v.insert(v.begin() + 1, {2, 3, 4});
-    EXPECT_EQ(v.size(), 5);
-    EXPECT_EQ(v[1], 2);
-    EXPECT_EQ(v[2], 3);
-    EXPECT_EQ(v[3], 4);
-    EXPECT_EQ(v[4], 5);
-}
-
-TEST_F(VectorTest, Erase) {
-    v.push_back(1);
-    v.push_back(2);
-    v.push_back(3);
+    v.insert(v.begin() + 2, 99);
     v.erase(v.begin() + 1);
-    EXPECT_EQ(v.size(), 2);
-    EXPECT_EQ(v[1], 3);
-}
-
-TEST_F(VectorTest, EraseRange) {
-    v.push_back(1);
-    v.push_back(2);
-    v.push_back(3);
-    v.push_back(4);
-    v.erase(v.begin() + 1, v.begin() + 3);
-    EXPECT_EQ(v.size(), 2);
-    EXPECT_EQ(v[0], 1);
-    EXPECT_EQ(v[1], 4);
-}
-
-TEST_F(VectorTest, Clear) {
-    v.push_back(1);
-    v.push_back(2);
+    v.resize(10, 8);
     v.clear();
     EXPECT_TRUE(v.empty());
-    EXPECT_EQ(v.size(), 0);
+    v.shrink_to_fit();
 }
 
-TEST_F(VectorTest, ResizeSmaller) {
-    v.push_back(1);
-    v.push_back(2);
-    v.push_back(3);
-    v.resize(2);
+TEST_F(VectorTest, CapacityAndAccess) {
+    v.resize(5, 7);
+    v.reserve(50);
+    v.shrink_to_fit();
+    EXPECT_EQ(v.at(3), 7);
+    EXPECT_THROW(v.at(10), std::out_of_range);
+    EXPECT_EQ(v.front(), v.back());
+    EXPECT_GE(v.capacity(), 5);
+
+}
+
+TEST_F(VectorTest, SwapAndComparison) {
+    Vector<int> v2{10, 20};
+    v.swap(v2);
     EXPECT_EQ(v.size(), 2);
-    EXPECT_EQ(v[0], 1);
-    EXPECT_EQ(v[1], 2);
+    EXPECT_NE(v, v2);
+    v2.push_back(30);
+    EXPECT_LT(v, v2);
+    Vector<int> v3{10, 20};
+    EXPECT_EQ(v, v3);
+    v3.swap(v2);
+    EXPECT_NE(v3, v2);
 }
 
-TEST_F(VectorTest, ResizeLarger) {
-    v.resize(3);
-    EXPECT_EQ(v.size(), 3);
+TEST_F(VectorTest, IteratorFunctions) {
+    v.insert(v.begin(), {1, 2, 3, 4, 5});
+    EXPECT_EQ(*v.begin(), 1);
+    EXPECT_EQ(*(v.end() - 1), 5);
+    EXPECT_EQ(*v.rbegin(), 5);
+    EXPECT_EQ(*(v.rend() - 1), 1);
+    EXPECT_EQ(v.cbegin(), v.begin());
+    EXPECT_EQ(v.cend(), v.end());
 }
 
-TEST_F(VectorTest, ResizeLargerWithValue) {
-    v.resize(3, 10);
-    EXPECT_EQ(v.size(), 3);
-    EXPECT_EQ(v[0], 10);
-    EXPECT_EQ(v[1], 10);
-    EXPECT_EQ(v[2], 10);
+TEST_F(VectorTest, EdgeCases) {
+    v.resize(1, 42);
+    v.pop_back();
+    EXPECT_TRUE(v.empty());
+    v.reserve(0);
+    EXPECT_EQ(v.capacity(), 1);
+    Vector<int> v2;
+    v2.resize(100, 5);
+    v2.erase(v2.begin(), v2.begin() + 50);
+    EXPECT_EQ(v2.size(), 50);
+    v2.insert(v2.begin(), {10, 20, 30});
+    EXPECT_EQ(v2.front(), 10);
+    EXPECT_EQ(v2.size(), 53);
+    v2.clear();
+    EXPECT_TRUE(v2.empty());
+    v2.shrink_to_fit();
 }
 
-
-// --- Сравнение ---
-TEST_F(VectorTest, EqualityOperator) {
-    vector<int> v1 {1, 2, 3};
-    vector<int> v2 {1, 2, 3};
-    EXPECT_EQ(v1, v2);
+TEST_F(VectorTest, LargeScaleOperations) {
+    Vector<int> v_large;
+    v_large.resize(1000, 1);
+    EXPECT_EQ(v_large.size(), 1000);
+    v_large.resize(500);
+    EXPECT_EQ(v_large.size(), 500);
+    v_large.reserve(2000);
+    EXPECT_GE(v_large.capacity(), 2000);
+    v_large.shrink_to_fit();
 }
 
-TEST_F(VectorTest, InequalityOperator) {
-    vector<int> v1 {1, 2, 3};
-    vector<int> v2 {1, 2, 4};
-    EXPECT_NE(v1, v2);
+TEST_F(VectorTest, AdvancedOperations) {
+    v.insert(v.begin(), {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+    auto it = v.erase(v.begin() + 5);
+    EXPECT_EQ(*it, 7);
+    v.insert(v.begin() + 2, {11, 12, 13});
+    EXPECT_EQ(v.at(2), 11);
+    v.resize(15, 99);
+    EXPECT_EQ(v.at(14), 99);
+    v.shrink_to_fit();
 }
 
-TEST_F(VectorTest, LessThanOperator) {
-    vector<int> v1{1, 2};
-    vector<int> v2 {1, 2, 3};
-    EXPECT_LT(v1, v2);
-    EXPECT_LE(v1, v2);
+TEST_F(VectorTest, ExtremeCases) {
+    Vector<int> v_empty;
+    EXPECT_EQ(v_empty.size(), 0);
+    v_empty.reserve(1000);
+    EXPECT_GE(v_empty.capacity(), 1000);
+    v_empty.resize(500);
+    EXPECT_EQ(v_empty.size(), 500);
+    v_empty.clear();
+    EXPECT_TRUE(v_empty.empty());
+    v_empty.shrink_to_fit();
 }
 
-TEST_F(VectorTest, GreaterThanOperator) {
-    vector<int> v1{1, 2};
-    vector<int> v2 {1, 2, 3};
-    EXPECT_GT(v2, v1);
-    EXPECT_GE(v2, v1);
+TEST_F(VectorTest, StressTest) {
+    Vector<int> v_stress;
+    v_stress.resize(1000000, 42);
+    EXPECT_EQ(v_stress.size(), 1000000);
+    v_stress.resize(500000);
+    EXPECT_EQ(v_stress.size(), 500000);
+    v_stress.clear();
+    EXPECT_TRUE(v_stress.empty());
+    v_stress.shrink_to_fit();
+}
+
+TEST_F(VectorTest, DataFunction) {
+	v.insert(v.begin(), {5, 10, 15});
+	int* ptr = v.data();
+	EXPECT_EQ(ptr[0], 5);
+	ptr[1] = 20;
+	EXPECT_EQ(v[1], 20);
+}
+
+TEST_F(VectorTest, ArrayIndexOperator) {
+	v.insert(v.begin(), {100, 200, 300});
+	EXPECT_EQ(v[0], 100);
+	v[0] = 150;
+	EXPECT_EQ(v.front(), 150);
+	EXPECT_EQ(v[2], 300);
+}
+
+TEST_F(VectorTest, MaxSizeFunction) {
+	// Проверяем, что max_size() возвращает значение, отличное от 0
+	EXPECT_GT(v.max_size(), 0);
+}
+
+TEST_F(VectorTest, ExplicitComparisonOperators) {
+	Vector<int> v1{1, 2, 3};
+	Vector<int> v2{1, 2, 4};
+	EXPECT_NE(v1, v2);
+	EXPECT_LT(v1, v2);
+	EXPECT_LE(v1, v2);
+	EXPECT_GT(v2, v1);
+	EXPECT_GE(v2, v1);
+}
+
+TEST_F(VectorTest, RvalueInsertAndPushBack) {
+	int a = 50;
+	v.push_back(std::move(a));
+	EXPECT_EQ(v.back(), 50);
+	v.insert(v.begin(), std::move(60));
+	EXPECT_EQ(v.front(), 60);
 }

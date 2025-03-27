@@ -5,7 +5,7 @@
 #include <limits>
 #include <string>
 #include <vector>
-#include <numeric> // Для std::accumulate
+#include <numeric>
 
 using my_container::List;
 
@@ -15,7 +15,7 @@ protected:
     List<std::string> listStr;
 };
 
-TEST_F(ListTest, ConstructorAndBasicProps) {
+TEST_F(ListTest, ConstructorИОсновныеСвойства) {
     EXPECT_TRUE(listInt.empty());
     EXPECT_EQ(listInt.size(), 0u);
     EXPECT_GT(listInt.max_size(), 0u);
@@ -27,11 +27,11 @@ TEST_F(ListTest, ConstructorAndBasicProps) {
     EXPECT_EQ(ilist.front(), 1);
     EXPECT_EQ(ilist.back(), 3);
     const List<int>& cilist = ilist;
-    EXPECT_EQ(*cilist.begin(), 1); // Test begin() const
-    EXPECT_NE(cilist.begin(), cilist.end()); // Test end() const
+    EXPECT_EQ(*cilist.begin(), 1);
+    EXPECT_NE(cilist.begin(), cilist.end());
 }
 
-TEST_F(ListTest, PushAndPop) {
+TEST_F(ListTest, ВставкаИУдалениеЭлементов) {
     listInt.push_back(10);
     listInt.push_front(5);
     listInt.push_back(20);
@@ -48,20 +48,20 @@ TEST_F(ListTest, PushAndPop) {
     EXPECT_THROW(listInt.pop_back(), std::out_of_range);
 }
 
-TEST_F(ListTest, RvaluePush) {
+TEST_F(ListTest, RvalueВставка) {
     std::string s1 = "hello";
     std::string s2 = "world";
     std::string s3 = "start";
     listStr.push_back(std::move(s1));
     listStr.push_front(std::move(s3));
-    listStr.push_back(std::move(s2)); // {"start", "hello", "world"}
+    listStr.push_back(std::move(s2));
     EXPECT_EQ(listStr.size(), 3u);
     EXPECT_EQ(listStr.front(), "start");
     EXPECT_EQ(listStr.back(), "world");
 }
 
 
-TEST_F(ListTest, CopyAndMoveCtor) {
+TEST_F(ListTest, КонструкторыКопированияИПеремещения) {
     List<int> source {1, 2, 3};
     List<int> copy(source);
     EXPECT_EQ(copy.size(), 3u);
@@ -70,7 +70,7 @@ TEST_F(ListTest, CopyAndMoveCtor) {
     EXPECT_EQ(moved.size(), 3u);
 }
 
-TEST_F(ListTest, CopyAndMoveAssign) {
+TEST_F(ListTest, ОператорыПрисваиванияКопированиемИПеремещением) {
     List<int> source {10, 20};
     List<int> copyAssign;
     copyAssign.push_back(1);
@@ -85,7 +85,7 @@ TEST_F(ListTest, CopyAndMoveAssign) {
     EXPECT_EQ(copyAssign.size(), 2u);
 }
 
-TEST_F(ListTest, ClearAndSwap) {
+TEST_F(ListTest, ОчисткаИОбмен) {
     List<int> a {1, 2};
     List<int> b {3, 4, 5};
     a.clear();
@@ -95,7 +95,7 @@ TEST_F(ListTest, ClearAndSwap) {
     EXPECT_TRUE(b.empty());
 }
 
-TEST_F(ListTest, Resize) {
+TEST_F(ListTest, ИзменениеРазмера) {
     listInt.resize(3, 7);
     EXPECT_EQ(listInt.size(), 3u);
     listInt.resize(1);
@@ -107,7 +107,7 @@ TEST_F(ListTest, Resize) {
     EXPECT_TRUE(listInt.empty());
 }
 
-TEST_F(ListTest, IteratorsAndAccumulate) {
+TEST_F(ListTest, ИтераторыИАккумуляция) {
     List<int> l {10, 20, 30};
     auto it = l.begin();
     *it = 15;
@@ -123,7 +123,7 @@ TEST_F(ListTest, IteratorsAndAccumulate) {
     EXPECT_EQ(reversed[0], 30);
 }
 
-TEST_F(ListTest, Insert) {
+TEST_F(ListTest, Вставка) {
     listInt.insert(listInt.begin(), 10);
     auto it = listInt.begin();
     listInt.insert(++it, 30);
@@ -134,28 +134,28 @@ TEST_F(ListTest, Insert) {
     EXPECT_EQ(*inserted_it, 20);
     std::string s = "world";
     listStr.insert(listStr.end(), "hello");
-    listStr.insert(listStr.end(), std::move(s)); // Test rvalue insert
+    listStr.insert(listStr.end(), std::move(s));
     EXPECT_EQ(listStr.back(), "world");
 }
 
-TEST_F(ListTest, EraseAndConstErase) {
+TEST_F(ListTest, УдалениеИКонстантноеУдаление) {
     List<int> l {10, 20, 30, 40, 50};
-    auto it = l.erase(l.begin()); // erase(iterator)
+    auto it = l.erase(l.begin());
     EXPECT_EQ(*it, 20);
-    auto cit_erase = l.cbegin(); // const_iterator
-    ++cit_erase; // points to 30
-    it = l.erase(cit_erase); // erase(const_iterator)
-    EXPECT_EQ(*it, 40); // {20, 40, 50}
+    auto cit_erase = l.cbegin();
+    ++cit_erase;
+    it = l.erase(cit_erase);
+    EXPECT_EQ(*it, 40);
     EXPECT_EQ(l.size(), 3u);
     auto cit_first = l.cbegin();
     auto cit_last = l.cend();
-    it = l.erase(cit_first, cit_last); // erase(const_iterator, const_iterator)
+    it = l.erase(cit_first, cit_last);
     EXPECT_TRUE(l.empty());
     EXPECT_EQ(it, l.end());
     EXPECT_THROW(l.erase(l.cbegin()), std::out_of_range);
 }
 
-TEST_F(ListTest, Comparison) {
+TEST_F(ListTest, Сравнение) {
     List<int> a {1, 2};
     List<int> b {1, 2};
     List<int> c {1, 3};
@@ -167,9 +167,9 @@ TEST_F(ListTest, Comparison) {
     EXPECT_TRUE(a >= b);
     Container<int>* pA = &a;
     Container<int>* pB = &b;
-    EXPECT_TRUE(*pA == *pB); // Base comparison
+    EXPECT_TRUE(*pA == *pB);
 }
-TEST_F(ListTest, InsertEdgeCases) {
+TEST_F(ListTest, ПредельныеСлучаиВставки) {
 	listInt.insert(listInt.end(), 100);
 	EXPECT_EQ(listInt.size(), 1u);
 	EXPECT_EQ(listInt.front(), 100);
@@ -184,7 +184,7 @@ TEST_F(ListTest, InsertEdgeCases) {
 	EXPECT_EQ(listInt.front(), 1);
 }
 
-TEST_F(ListTest, EraseEdgeCases) {
+TEST_F(ListTest, ПредельныеСлучаиУдаления) {
 	List<int> l {1, 2, 3, 4, 5};
 	auto it = l.erase(l.begin(), l.end());
 	EXPECT_TRUE(l.empty());
@@ -193,7 +193,7 @@ TEST_F(ListTest, EraseEdgeCases) {
 	EXPECT_THROW(l.erase(l.begin()), std::out_of_range);
 }
 
-TEST_F(ListTest, ReverseIterator) {
+TEST_F(ListTest, РеверсивныйИтератор) {
 	List<int> l {1, 2, 3, 4};
 	auto rit = l.rbegin();
 	EXPECT_EQ(*rit, 4);
@@ -203,7 +203,7 @@ TEST_F(ListTest, ReverseIterator) {
 	EXPECT_EQ(*rit, 2);
 }
 
-TEST_F(ListTest, SwapWithSelf) {
+TEST_F(ListTest, ОбменССамСобой) {
 	List<int> l {10, 20, 30};
 	l.swap(l);
 	EXPECT_EQ(l.size(), 3u);

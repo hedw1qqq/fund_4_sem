@@ -68,7 +68,7 @@ namespace my_container {
         reference at(size_type pos) {
             if (pos >= N) {
                 throw std::out_of_range("Array index out of range: " + std::to_string(pos) +
-                                      ", max allowed: " + std::to_string(N - 1));
+                                        ", max allowed: " + std::to_string(N - 1));
             }
             return elems[pos];
         }
@@ -76,7 +76,7 @@ namespace my_container {
         const_reference at(size_type pos) const {
             if (pos >= N) {
                 throw std::out_of_range("Array index out of range: " + std::to_string(pos) +
-                                      ", max allowed: " + std::to_string(N - 1));
+                                        ", max allowed: " + std::to_string(N - 1));
             }
             return elems[pos];
         }
@@ -125,6 +125,19 @@ namespace my_container {
 
         bool operator==(const Array &other) const {
             return (*this <=> other) == std::strong_ordering::equal;
+        }
+
+        bool operator==(const Container<T> &other) const override {
+            auto otherptr = dynamic_cast<Array *>(&other);
+            if (otherptr == nullptr) {
+                return false;
+            }
+
+            return *this == *otherptr;
+        }
+
+        bool operator!=(const Container<T> &other) const override {
+            return !(*this == other);
         }
 
         bool operator!=(const Array &other) const { return !(*this == other); }
