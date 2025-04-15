@@ -11,7 +11,7 @@ namespace my_container {
 template <typename T>
 class Deque final : public List<T> {
    public:
-	using List<T>::List;
+	using List<T>::List; // для наследования конструкторов
 
 	T &at(size_t pos) {
 		if (pos >= this->size()) {
