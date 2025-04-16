@@ -36,7 +36,6 @@ set(BUILD_GMOCK OFF CACHE BOOL "" FORCE)
 set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
-# Основная библиотека
 add_library(my_lib include/bigint.hpp
         src/bigint.cpp)
 
@@ -79,7 +78,6 @@ else()
     message(WARNING "lcov или genhtml не найдены, цель 'coverage' недоступна.")
 endif()
 
-# Цель для cppcheck с исправленным путем
 find_program(CPPCHECK cppcheck)
 if(CPPCHECK)
     add_custom_target(cppcheck

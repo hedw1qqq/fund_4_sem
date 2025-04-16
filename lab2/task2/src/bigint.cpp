@@ -383,12 +383,12 @@ bool BigInt::operator<(const BigInt& other) const {
 		return false;
 	}
 
-	int magnitude_comparison = compareValue(other);
+	int value_comparison = compareValue(other);
 
 	if (!isNegative) {
-		return magnitude_comparison == -1;
+		return value_comparison == -1;
 	} else {
-		return magnitude_comparison == 1;
+		return value_comparison == 1;
 	}
 }
 
@@ -426,7 +426,7 @@ std::istream& operator>>(std::istream& is, BigInt& num) {
 	return is;
 }
 
-BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod) {
+BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod)  {
 	if (mod.isNull() || mod == BigInt(1)) {
 		if (mod.isNull()) throw std::runtime_error("Modulo by zero");
 		return BigInt(0);
