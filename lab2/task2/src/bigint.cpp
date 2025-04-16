@@ -22,12 +22,18 @@ bool BigInt::validateString(const std::string& str) {
 	}
 	return true;
 }
+bool BigInt::isNull() const {
+	if (digits.size() == 1 && digits[0] == 0) {
+		return true;
+	}
+	return false;
+}
 
 void BigInt::removeLeadingZeros() {
 	while (digits.size() > 1 && digits.back() == 0) {
 		digits.pop_back();
 	}
-	if (digits.size() == 1 && digits[0] == 0) {
+	if (isNull()) {
 		isNegative = false;
 	}
 }
@@ -201,7 +207,7 @@ BigInt& BigInt::operator+=(const BigInt& other) {
 // a += (-b)
 BigInt& BigInt::operator-=(const BigInt& other) {
 	BigInt temp = other;
-	if (!(temp.digits.size() == 1 && temp.digits[0] == 0)) {
+	if (!(temp.isNull())) {
 		temp.isNegative = !temp.isNegative;
 	}
 	return *this += temp;
@@ -237,8 +243,8 @@ BigInt BigInt::operator--(int) {
 }
 
 BigInt& BigInt::operator*=(const BigInt& other) {
-	bool this_is_zero = (digits.size() == 1 && digits[0] == 0);
-	bool other_is_zero = (other.digits.size() == 1 && other.digits[0] == 0);
+	bool this_is_zero = isNull();
+	bool other_is_zero = other.isNull();
 	if (this_is_zero || other_is_zero) {
 		*this = BigInt(0);
 		return *this;
@@ -269,11 +275,11 @@ BigInt& BigInt::operator*=(const BigInt& other) {
 }
 
 BigInt& BigInt::operator/=(const BigInt& other) {
-	if (other.digits.size() == 1 && other.digits[0] == 0) {
+	if (other.isNull()) {
 		throw std::runtime_error("Division by zero");
 	}
 
-	bool this_is_zero = (digits.size() == 1 && digits[0] == 0);
+	bool this_is_zero = isNull();
 	if (this_is_zero) {
 		return *this;
 	}
@@ -346,6 +352,23 @@ BigInt& BigInt::operator/=(const BigInt& other) {
 
 	return *this;
 }
+BigInt& BigInt::operator%=(const BigInt& num) {
+	if (num.isNull()) {
+		throw std::runtime_error("Modulo by zero");
+	}
+
+	// r = a - (a / b) * b
+	BigInt quotient = *this / num;
+	*this -= (quotient * num);
+
+	if (isNull()) {
+		isNegative = false;
+	}
+
+	return *this;
+}
+
+BigInt BigInt::operator%(const BigInt& other) const { return BigInt(*this) %= other; }
 
 BigInt BigInt::operator/(const BigInt& other) const { return BigInt(*this) /= other; }
 BigInt BigInt::operator*(const BigInt& other) const { return BigInt(*this) *= other; }
@@ -373,7 +396,7 @@ bool BigInt::operator<=(const BigInt& other) const { return !(*this > other); }
 bool BigInt::operator>=(const BigInt& other) const { return !(*this < other); }
 
 std::ostream& operator<<(std::ostream& os, const BigInt& num) {
-	if (num.digits.size() == 1 && num.digits[0] == 0) {
+	if (num.isNull()) {
 		os << '0';
 		return os;
 	}
@@ -401,4 +424,44 @@ std::istream& operator>>(std::istream& is, BigInt& num) {
 	}
 
 	return is;
+}
+
+BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod) {
+	if (mod.isNull() || mod == BigInt(1)) {
+		if (mod.isNull()) throw std::runtime_error("Modulo by zero");
+		return BigInt(0);
+	}
+	if (exp.isNegative) {
+		throw std::invalid_argument("Negative exp");
+	}
+	if (exp.isNull()) {
+		return BigInt(1);
+	}
+	if (base.isNull()) {
+		return BigInt(0);
+	}
+
+
+	BigInt normalized_base = base % mod;
+	if (normalized_base.isNegative) {
+		normalized_base += mod;
+	}
+
+
+	BigInt half_exp_result = mod_exp(normalized_base, exp / BigInt(2), mod);
+
+	BigInt result_squared = (half_exp_result * half_exp_result) % mod;
+	if (result_squared.isNegative) {
+		result_squared += mod;
+	}
+
+	if ((exp % BigInt(2)).isNull()) {
+		return result_squared;
+	} else {
+		BigInt final_result = (normalized_base * result_squared) % mod;
+		if (final_result.isNegative) {
+			final_result += mod;
+		}
+		return final_result;
+	}
 }
