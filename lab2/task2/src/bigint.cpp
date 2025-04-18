@@ -76,26 +76,26 @@ void BigInt::addValue(const BigInt& other) {
 	}
 }
 
-int BigInt::compareValue(const BigInt& other) const {
+std::strong_ordering BigInt::compareValue(const BigInt& other) const {
 	size_t n = digits.size();
 	size_t m = other.digits.size();
 
 	if (n > m) {
-		return 1;
+		return std::strong_ordering::greater;
 	}
 	if (n < m) {
-		return -1;
+		return std::strong_ordering::less;
 	}
 
 	for (int i = n - 1; i >= 0; --i) {
 		if (digits[i] > other.digits[i]) {
-			return 1;
+			return std::strong_ordering::greater;
 		}
 		if (digits[i] < other.digits[i]) {
-			return -1;
+			return std::strong_ordering::less;
 		}
 	}
-	return 0;
+	return std::strong_ordering::equal;
 }
 
 BigInt::BigInt() : isNegative(false) { digits.push_back(0); }
@@ -144,20 +144,21 @@ BigInt::BigInt(const std::string& str) : isNegative(false) {
 
 	digits.clear();
 
-	for (size_t i = str.length() - 1; i >= first_digit_pos; i -= BASE_DIGITS) {
-		size_t block_start = std::max(first_digit_pos, i - BASE_DIGITS + 1);
+	for (int i = static_cast<int>(str.length() - 1); i >= static_cast<int>(first_digit_pos);
+	     i -= BASE_DIGITS) {  // каст, чтобы проверить нулевой индекс
+		int block_start = std::max(static_cast<int>(first_digit_pos), i - BASE_DIGITS + 1);
 		std::string current_part_str = str.substr(block_start, i - block_start + 1);
 		try {
 			digits.push_back(std::stoull(current_part_str));
 		} catch (const std::out_of_range& oor) {
-			throw std::out_of_range("string is out of range: " +
+			throw std::out_of_range("String segment is out of range for ull: " +
 			                        current_part_str);
 		}
 	}
 
 	removeLeadingZeros();
 }
-BigInt::BigInt(const BigInt& other) : digits(other.digits), isNegative(other.isNegative){};
+BigInt::BigInt(const BigInt& other) : digits(other.digits), isNegative(other.isNegative) {};
 
 BigInt::BigInt(BigInt&& other) noexcept : digits(std::move(other.digits)), isNegative(other.isNegative) {
 	other.isNegative = false;
@@ -186,12 +187,12 @@ BigInt& BigInt::operator+=(const BigInt& other) {
 	if (isNegative == other.isNegative) {
 		addValue(other);
 	} else {
-		int value_comparison = compareValue(other);
+		std::strong_ordering value_comparison = compareValue(other);
 
-		if (value_comparison == 0) {
+		if (value_comparison == std::strong_ordering::equal) {
 			digits = {0};
 			isNegative = false;
-		} else if (value_comparison > 0) {
+		} else if (value_comparison == std::strong_ordering::greater) {
 			subtractValue(other);
 		} else {
 			BigInt temp = other;
@@ -284,13 +285,13 @@ BigInt& BigInt::operator/=(const BigInt& other) {
 		return *this;
 	}
 
-	int magnitude_cmp = compareValue(other);
+	std::strong_ordering value_cmp = compareValue(other);
 
-	if (magnitude_cmp < 0) {
+	if (value_cmp == std::strong_ordering::less) {
 		*this = BigInt(0);
 		return *this;
 	}
-	if (magnitude_cmp == 0) {
+	if (value_cmp == std::strong_ordering::equal) {
 		*this = BigInt(1);
 		isNegative = (isNegative != other.isNegative);
 		return *this;
@@ -306,7 +307,7 @@ BigInt& BigInt::operator/=(const BigInt& other) {
 	BigInt quotient(0);
 	BigInt current_partial_dividend(0);
 
-	for (int i = abs_dividend.digits.size() - 1; i >= 0; --i) {
+	for (int i = static_cast<int>(abs_dividend.digits.size()) - 1; i >= 0; --i) {
 		current_partial_dividend *= BigInt(BASE);
 		current_partial_dividend += BigInt(abs_dividend.digits[i]);
 
@@ -375,12 +376,12 @@ bool BigInt::operator<(const BigInt& other) const {
 		return false;
 	}
 
-	int value_comparison = compareValue(other);
+	std::strong_ordering value_comparison = compareValue(other);
 
 	if (!isNegative) {
-		return value_comparison == -1;
+		return value_comparison == std::strong_ordering::less;
 	} else {
-		return value_comparison == 1;
+		return value_comparison == std::strong_ordering::greater;
 	}
 }
 
@@ -397,7 +398,7 @@ std::ostream& operator<<(std::ostream& os, const BigInt& num) {
 		os << '-';
 	}
 	os << num.digits.back();
-	for (size_t i = num.digits.size() - 2; i >= 0; --i) {
+	for (int i = static_cast<int>(num.digits.size()) - 2; i >= 0; --i) {
 		os << std::setw(BigInt::BASE_DIGITS) << std::setfill('0') << num.digits[i];
 	}
 
@@ -410,7 +411,9 @@ std::istream& operator>>(std::istream& is, BigInt& num) {
 		try {
 			BigInt temp(input_str);
 			num = std::move(temp);
-		} catch (...) {
+		} catch (const std::invalid_argument& e) {
+			is.setstate(std::ios_base::failbit);
+		} catch (const std::out_of_range& e) {
 			is.setstate(std::ios_base::failbit);
 		}
 	}
@@ -420,9 +423,7 @@ std::istream& operator>>(std::istream& is, BigInt& num) {
 
 BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod) {
 	if (mod.isNull() || mod == BigInt(1)) {
-		if (mod.isNull()) {
-			throw std::runtime_error("Modulo by zero");
-		}
+		if (mod.isNull()) throw std::runtime_error("Modulo by zero");
 		return BigInt(0);
 	}
 	if (exp.isNegative) {
@@ -434,19 +435,12 @@ BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod)
 	if (base.isNull()) {
 		return BigInt(0);
 	}
-
 	BigInt normalized_base = base % mod;
 	if (normalized_base.isNegative) {
 		normalized_base += mod;
 	}
-
 	BigInt half_exp_result = mod_exp(normalized_base, exp / BigInt(2), mod);
-
 	BigInt result_squared = (half_exp_result * half_exp_result) % mod;
-	if (result_squared.isNegative) {
-		result_squared += mod;
-	}
-
 	if ((exp % BigInt(2)).isNull()) {
 		return result_squared;
 	} else {
