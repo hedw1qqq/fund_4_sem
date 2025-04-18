@@ -144,20 +144,20 @@ BigInt::BigInt(const std::string& str) : isNegative(false) {
 
 	digits.clear();
 
-	for (int i = str.length() - 1; i >= (int)first_digit_pos; i -= BASE_DIGITS) {
-		int block_start = std::max((int)first_digit_pos, i - BASE_DIGITS + 1);
+	for (size_t i = str.length() - 1; i >= first_digit_pos; i -= BASE_DIGITS) {
+		size_t block_start = std::max(first_digit_pos, i - BASE_DIGITS + 1);
 		std::string current_part_str = str.substr(block_start, i - block_start + 1);
 		try {
 			digits.push_back(std::stoull(current_part_str));
 		} catch (const std::out_of_range& oor) {
-			throw std::out_of_range("Numeric string segment is out of range for unsigned long long: " +
+			throw std::out_of_range("string is out of range: " +
 			                        current_part_str);
 		}
 	}
 
 	removeLeadingZeros();
 }
-BigInt::BigInt(const BigInt& other) : digits(other.digits), isNegative(other.isNegative) {};
+BigInt::BigInt(const BigInt& other) : digits(other.digits), isNegative(other.isNegative){};
 
 BigInt::BigInt(BigInt&& other) noexcept : digits(std::move(other.digits)), isNegative(other.isNegative) {
 	other.isNegative = false;
@@ -186,12 +186,12 @@ BigInt& BigInt::operator+=(const BigInt& other) {
 	if (isNegative == other.isNegative) {
 		addValue(other);
 	} else {
-		int Value_comparison = compareValue(other);
+		int value_comparison = compareValue(other);
 
-		if (Value_comparison == 0) {
+		if (value_comparison == 0) {
 			digits = {0};
 			isNegative = false;
-		} else if (Value_comparison > 0) {
+		} else if (value_comparison > 0) {
 			subtractValue(other);
 		} else {
 			BigInt temp = other;
@@ -315,14 +315,6 @@ BigInt& BigInt::operator/=(const BigInt& other) {
 
 		while (low < high) {
 			unsigned long long mid = low + (high - low) / 2;
-			if (mid == 0) {
-				if (abs_divisor <= current_partial_dividend) {
-					current_quotient_digit = 1;
-				} else {
-					current_quotient_digit = 0;
-				}
-				break;
-			}
 
 			BigInt temp_product = abs_divisor;
 			temp_product *= BigInt(mid);
@@ -405,7 +397,7 @@ std::ostream& operator<<(std::ostream& os, const BigInt& num) {
 		os << '-';
 	}
 	os << num.digits.back();
-	for (int i = (int)num.digits.size() - 2; i >= 0; --i) {
+	for (size_t i = num.digits.size() - 2; i >= 0; --i) {
 		os << std::setw(BigInt::BASE_DIGITS) << std::setfill('0') << num.digits[i];
 	}
 
@@ -426,9 +418,11 @@ std::istream& operator>>(std::istream& is, BigInt& num) {
 	return is;
 }
 
-BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod)  {
+BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod) {
 	if (mod.isNull() || mod == BigInt(1)) {
-		if (mod.isNull()) throw std::runtime_error("Modulo by zero");
+		if (mod.isNull()) {
+			throw std::runtime_error("Modulo by zero");
+		}
 		return BigInt(0);
 	}
 	if (exp.isNegative) {
@@ -441,12 +435,10 @@ BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod)
 		return BigInt(0);
 	}
 
-
 	BigInt normalized_base = base % mod;
 	if (normalized_base.isNegative) {
 		normalized_base += mod;
 	}
-
 
 	BigInt half_exp_result = mod_exp(normalized_base, exp / BigInt(2), mod);
 
@@ -459,9 +451,6 @@ BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod)
 		return result_squared;
 	} else {
 		BigInt final_result = (normalized_base * result_squared) % mod;
-		if (final_result.isNegative) {
-			final_result += mod;
-		}
 		return final_result;
 	}
 }
