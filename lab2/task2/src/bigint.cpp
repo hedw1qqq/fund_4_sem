@@ -1,8 +1,5 @@
 #include "../include/bigint.hpp"
 
-const unsigned long long BigInt::BASE;
-const int BigInt::BASE_DIGITS;
-
 bool BigInt::validateString(const std::string& str) {
 	if (str.empty()) {
 		return false;
@@ -144,15 +141,14 @@ BigInt::BigInt(const std::string& str) : isNegative(false) {
 
 	digits.clear();
 
-	for (int i = static_cast<int>(str.length() - 1); i >= static_cast<int>(first_digit_pos);
-	     i -= BASE_DIGITS) {  // каст, чтобы проверить нулевой индекс
-		int block_start = std::max(static_cast<int>(first_digit_pos), i - BASE_DIGITS + 1);
+	for (long long i = static_cast<long long>(str.length() - 1); i >= static_cast<long long>(first_digit_pos);
+	     i -= BASE_DIGITS) {
+		int block_start = std::max(static_cast<long long>(first_digit_pos), i - BASE_DIGITS + 1);
 		std::string current_part_str = str.substr(block_start, i - block_start + 1);
 		try {
 			digits.push_back(std::stoull(current_part_str));
 		} catch (const std::out_of_range& oor) {
-			throw std::out_of_range("String segment is out of range for ull: " +
-			                        current_part_str);
+			throw std::out_of_range("String segment is out of range for ull: " + current_part_str);
 		}
 	}
 
@@ -307,7 +303,7 @@ BigInt& BigInt::operator/=(const BigInt& other) {
 	BigInt quotient(0);
 	BigInt current_partial_dividend(0);
 
-	for (int i = static_cast<int>(abs_dividend.digits.size()) - 1; i >= 0; --i) {
+	for (long long i = static_cast<long long>(abs_dividend.digits.size()) - 1; i >= 0; --i) {
 		current_partial_dividend *= BigInt(BASE);
 		current_partial_dividend += BigInt(abs_dividend.digits[i]);
 
@@ -398,7 +394,7 @@ std::ostream& operator<<(std::ostream& os, const BigInt& num) {
 		os << '-';
 	}
 	os << num.digits.back();
-	for (int i = static_cast<int>(num.digits.size()) - 2; i >= 0; --i) {
+	for (long long i = static_cast<long long>(num.digits.size()) - 2; i >= 0; --i) {
 		os << std::setw(BigInt::BASE_DIGITS) << std::setfill('0') << num.digits[i];
 	}
 
@@ -423,7 +419,9 @@ std::istream& operator>>(std::istream& is, BigInt& num) {
 
 BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod) {
 	if (mod.isNull() || mod == BigInt(1)) {
-		if (mod.isNull()) throw std::runtime_error("Modulo by zero");
+		if (mod.isNull()) {
+			throw std::runtime_error("Modulo by zero");
+		}
 		return BigInt(0);
 	}
 	if (exp.isNegative) {

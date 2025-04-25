@@ -46,8 +46,8 @@ class BigInt {
    private:
 	std::vector<unsigned long long> digits;
 	bool isNegative;
-	static const unsigned long long BASE = 1000000000;
-	static const int BASE_DIGITS = log10(BASE);
+	inline static const unsigned long long BASE = 1000000000;
+	inline static const int BASE_DIGITS = log10(BASE);
 	void removeLeadingZeros();
 	static bool validateString(const std::string& str);
 	void subtractValue(const BigInt& smaller);
