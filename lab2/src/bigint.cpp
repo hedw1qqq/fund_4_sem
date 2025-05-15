@@ -340,13 +340,13 @@ BigInt& BigInt::operator/=(const BigInt& other) {
 
 	return *this;
 }
-BigInt& BigInt::operator%=(const BigInt& num) {
-	if (num.isNull()) {
+BigInt& BigInt::operator%=(const BigInt& other) {
+	if (other.isNull()) {
 		throw std::runtime_error("Modulo by zero");
 	}
 
-	BigInt quotient = *this / num;
-	*this -= (quotient * num);
+	BigInt quotient = *this / other;
+	*this -= (quotient * other);
 
 	if (isNull()) {
 		isNegative = false;
@@ -503,7 +503,7 @@ BigInt BigInt::karatsubaRecursive(BigInt num1, BigInt num2) {
 	middleTermProduct -= prodLowLow;
 
 	prodHighHigh.shiftLeft(static_cast<int>(n));
-	middleTermProduct.shiftLeft(halfN);
+	middleTermProduct.shiftLeft(static_cast<int>(halfN));
 
 	BigInt finalProductValue = prodHighHigh;
 	finalProductValue += middleTermProduct;

@@ -48,7 +48,7 @@ class BigInt {
 	static BigInt karatsuba(const BigInt& num1, const BigInt& num2);
 
    private:
-  static BigInt karatsubaRecursive(BigInt num1, BigInt num2);
+	static BigInt karatsubaRecursive(BigInt num1, BigInt num2);
 	std::vector<unsigned long long> digits;
 	bool isNegative;
 	inline static const unsigned long long BASE = 1000000000;
