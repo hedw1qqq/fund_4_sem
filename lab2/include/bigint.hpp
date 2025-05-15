@@ -2,6 +2,7 @@
 #include <math.h>
 
 #include <compare>
+#include <complex>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -47,7 +48,13 @@ class BigInt {
 	void shiftLeft(int k);
 	static BigInt karatsuba(const BigInt& num1, const BigInt& num2);
 
+	using cd = std::complex<long double>;
+	inline static const double PI = acos(-1.0L);
+    static void fft(BigInt& a, bool invert);
+    static BigInt fftMultiply(const BigInt& num1, const BigInt& num2);
+
    private:
+    static void fftAlgorithm(std::vector<cd>& a, bool invert);
 	static BigInt karatsubaRecursive(BigInt num1, BigInt num2);
 	std::vector<unsigned long long> digits;
 	bool isNegative;

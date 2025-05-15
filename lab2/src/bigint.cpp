@@ -67,9 +67,9 @@ void BigInt::addValue(const BigInt& other) {
 			digits.push_back(0);
 		}
 		unsigned long long other_digit = (i < m) ? other.digits[i] : 0;
-		unsigned long long current_sum = digits[i] + other_digit + carry;
-		digits[i] = current_sum % BASE;
-		carry = current_sum / BASE;
+		unsigned long long currentSum = digits[i] + other_digit + carry;
+		digits[i] = currentSum % BASE;
+		carry = currentSum / BASE;
 	}
 }
 
@@ -455,8 +455,6 @@ void BigInt::shiftLeft(const int k) {
 	}
 }
 
-
-// A * B  = A0B0 + ((A0 + A1) * (B0 + B1) - A0B0 - A1B1) * x^n/2 + A1B1 * x ^ n
 BigInt BigInt::karatsubaRecursive(BigInt num1, BigInt num2) {
 	if (num1.isNull() || num2.isNull()) {
 		return BigInt(0);
@@ -490,7 +488,7 @@ BigInt BigInt::karatsubaRecursive(BigInt num1, BigInt num2) {
 
 	yHigh.digits.assign(num2.digits.begin() + halfN, num2.digits.end());
 	yHigh.removeLeadingZeros();
-	
+
 	BigInt prodHighHigh = karatsubaRecursive(xHigh, yHigh);
 	BigInt prodLowLow = karatsubaRecursive(xLow, yLow);
 
@@ -525,4 +523,135 @@ BigInt BigInt::karatsuba(const BigInt& num1, const BigInt& num2) {
 		ans.isNegative = false;
 	}
 	return ans;
+}
+
+void BigInt::fftAlgorithm(std::vector<cd>& a, bool invert) {
+	int n = a.size();
+	if (n == 1) {
+		return;
+	}
+
+	std::vector<cd> a0(n / 2), a1(n / 2);
+	for (int i = 0; 2 * i < n; i++) {
+		a0[i] = a[2 * i];
+		a1[i] = a[2 * i + 1];
+	}
+	fftAlgorithm(a0, invert);
+	fftAlgorithm(a1, invert);
+
+	double ang = 2 * PI / n * (invert ? -1.0 : 1.0);
+	cd w(1.0, 0.0);
+	cd wn(cos(ang), sin(ang));
+
+	for (int i = 0; 2 * i < n; i++) {
+		a[i] = a0[i] + w * a1[i];
+		a[i + n / 2] = a0[i] - w * a1[i];
+		if (invert) {
+			a[i] /= 2.0;
+			a[i + n / 2] /= 2.0;
+		}
+		w *= wn;
+	}
+}
+
+void BigInt::fft(BigInt& num, bool invert) {
+	size_t n_orig = num.digits.size();
+
+	if (n_orig == 1) {
+			std::vector<cd> temp_coeffs(1);
+			temp_coeffs[0] = cd(static_cast<long double>(num.digits[0]), 0.0);
+			fftAlgorithm(temp_coeffs, invert);
+			if (invert) {
+				num.digits[0] = static_cast<unsigned long long>(std::round(temp_coeffs[0].real()));
+		}
+		return;
+	}
+
+	size_t n = 1;
+	while (n < n_orig) {
+		n <<= 1;
+	}
+
+	std::vector<cd> coeffs(n, cd(0, 0));
+	for (size_t i = 0; i < n_orig; ++i) {
+		coeffs[i] = cd(static_cast<long double>(num.digits[i]), 0.0);
+	}
+
+	fftAlgorithm(coeffs, invert);
+
+	if (invert) {
+		num.digits.resize(n);
+		for (size_t i = 0; i < n; ++i) {
+			num.digits[i] = static_cast<unsigned long long>(std::round(coeffs[i].real()));
+		}
+
+		num.removeLeadingZeros();
+	}
+}
+
+BigInt BigInt::fftMultiply(const BigInt& num1, const BigInt& num2) {
+	if (num1.isNull() || num2.isNull()) {
+		return BigInt(0);
+	}
+
+	bool resultIsNegative = (num1.isNegative != num2.isNegative);
+
+	std::vector<cd> fa(num1.digits.size());
+	for (size_t i = 0; i < num1.digits.size(); ++i) {
+		fa[i] = cd(static_cast<long double>(num1.digits[i]), 0.0);
+	}
+
+	std::vector<cd> fb(num2.digits.size());
+	for (size_t i = 0; i < num2.digits.size(); ++i) {
+		fb[i] = cd(static_cast<long double>(num2.digits[i]), 0.0);
+	}
+
+	size_t n = 1;
+	while (n < fa.size() + fb.size()) {
+		n <<= 1;
+	}
+
+	fa.resize(n, cd(0, 0));
+	fb.resize(n, cd(0, 0));
+
+	fftAlgorithm(fa, false);
+	fftAlgorithm(fb, false);
+
+	for (size_t i = 0; i < n; i++) {
+		fa[i] *= fb[i];
+	}
+
+	fftAlgorithm(fa, true);
+
+	BigInt result;
+	result.digits.assign(n + 1, 0);
+
+	unsigned long long carry = 0;
+	for (size_t i = 0; i < n; i++) {
+		double realVal = fa[i].real();
+		unsigned long long termVal = static_cast<unsigned long long>(std::round(realVal));
+
+		unsigned long long currentSum = termVal + carry;
+		result.digits[i] = currentSum % BASE;
+		carry = currentSum / BASE;
+	}
+
+	size_t currentIdx = n;
+	while (carry > 0) {
+		if (currentIdx >= result.digits.size()) {
+			result.digits.push_back(0);
+		}
+		result.digits[currentIdx] = carry % BASE;
+		carry /= BASE;
+		currentIdx++;
+	}
+
+	result.isNegative = resultIsNegative;
+	result.removeLeadingZeros();
+
+	if (result.isNull()) {
+		result.isNegative = false;
+	}
+
+	return result;
 }

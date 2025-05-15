@@ -428,3 +428,19 @@ TEST_F(BigIntTest, Karatsuba) {
 	EXPECT_EQ(ans2, c*d);
 	EXPECT_EQ(BigInt{0} * BigInt{"-11"}, BigInt::karatsuba(BigInt{0},BigInt{"-11"}));
 }
+
+TEST_F(BigIntTest, FFT) {
+	BigInt a1{"-971"};
+	BigInt b1{"9321"};
+	auto ans1 = BigInt::fftMultiply(a1, b1);
+	EXPECT_EQ(ans1, a1*b1);
+	BigInt c{"3346"};
+	BigInt d{"-11"};
+	auto ans2 = BigInt::fftMultiply(c, d);
+	EXPECT_EQ(ans2, c*d);
+	EXPECT_EQ(BigInt{0} * BigInt{"-11"}, BigInt::fftMultiply(BigInt{0},BigInt{"-11"}));
+	BigInt fft1{"9321"};
+	BigInt::fft(fft1, false);
+	BigInt::fft(fft1, true);
+	EXPECT_EQ(fft1, BigInt{"9321"});
+}
