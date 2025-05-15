@@ -416,3 +416,15 @@ TEST_F(BigIntTest, ModuloAndExponentiation) {
     EXPECT_EQ(BigInt::mod_exp(ten, ten, one), zero);
 	EXPECT_EQ(BigInt::mod_exp(0, BigInt(4), mod_val), BigInt(0));
 }
+
+TEST_F(BigIntTest, Karatsuba) {
+	BigInt a1{"-976244321"};
+	BigInt b1{"987654321"};
+	auto ans1 = BigInt::karatsuba(a1, b1);
+	EXPECT_EQ(ans1, a1*b1);
+	BigInt c{"345857346853476"};
+	BigInt d{"-11"};
+	auto ans2 = BigInt::karatsuba(c, d);
+	EXPECT_EQ(ans2, c*d);
+	EXPECT_EQ(BigInt{0} * BigInt{"-11"}, BigInt::karatsuba(BigInt{0},BigInt{"-11"}));
+}

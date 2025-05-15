@@ -201,7 +201,6 @@ BigInt& BigInt::operator+=(const BigInt& other) {
 	return *this;
 }
 
-// a += (-b)
 BigInt& BigInt::operator-=(const BigInt& other) {
 	BigInt temp = other;
 	if (!(temp.isNull())) {
@@ -346,7 +345,6 @@ BigInt& BigInt::operator%=(const BigInt& num) {
 		throw std::runtime_error("Modulo by zero");
 	}
 
-	// r = a - (a / b) * b
 	BigInt quotient = *this / num;
 	*this -= (quotient * num);
 
@@ -445,4 +443,86 @@ BigInt BigInt::mod_exp(const BigInt& base, const BigInt& exp, const BigInt& mod)
 		BigInt final_result = (normalized_base * result_squared) % mod;
 		return final_result;
 	}
+}
+
+void BigInt::shiftLeft(const int k) {
+	if (k > 0) {
+		digits.insert(digits.begin(), k, 0);
+	} else if (k < 0) {
+		for (int i = 0; i < abs(k); ++i) {
+			digits.erase(digits.begin());
+		}
+	}
+}
+
+
+// A * B  = A0B0 + ((A0 + A1) * (B0 + B1) - A0B0 - A1B1) * x^n/2 + A1B1 * x ^ n
+BigInt BigInt::karatsubaRecursive(BigInt num1, BigInt num2) {
+	if (num1.isNull() || num2.isNull()) {
+		return BigInt(0);
+	}
+
+	size_t n = 1;
+	size_t maxDigitsSize = std::max(num1.digits.size(), num2.digits.size());
+
+	while (n < maxDigitsSize) {
+		n <<= 1;
+	}
+
+	num1.digits.resize(n, 0);
+	num2.digits.resize(n, 0);
+
+	if (n == 1) {
+		return num1 * num2;
+	}
+
+	BigInt xLow, xHigh, yLow, yHigh;
+	size_t halfN = n / 2;
+
+	xLow.digits.assign(num1.digits.begin(), num1.digits.begin() + halfN);
+	xLow.removeLeadingZeros();
+
+	xHigh.digits.assign(num1.digits.begin() + halfN, num1.digits.end());
+	xHigh.removeLeadingZeros();
+
+	yLow.digits.assign(num2.digits.begin(), num2.digits.begin() + halfN);
+	yLow.removeLeadingZeros();
+
+	yHigh.digits.assign(num2.digits.begin() + halfN, num2.digits.end());
+	yHigh.removeLeadingZeros();
+	
+	BigInt prodHighHigh = karatsubaRecursive(xHigh, yHigh);
+	BigInt prodLowLow = karatsubaRecursive(xLow, yLow);
+
+	BigInt sumXHighXLow = xHigh + xLow;
+	BigInt sumYHighYLow = yHigh + yLow;
+	BigInt prodOfSums = karatsubaRecursive(sumXHighXLow, sumYHighYLow);
+
+	BigInt middleTermProduct = prodOfSums;
+	middleTermProduct -= prodHighHigh;
+	middleTermProduct -= prodLowLow;
+
+	prodHighHigh.shiftLeft(static_cast<int>(n));
+	middleTermProduct.shiftLeft(halfN);
+
+	BigInt finalProductValue = prodHighHigh;
+	finalProductValue += middleTermProduct;
+	finalProductValue += prodLowLow;
+
+	finalProductValue.removeLeadingZeros();
+
+	return finalProductValue;
+}
+
+BigInt BigInt::karatsuba(const BigInt& num1, const BigInt& num2) {
+	bool sign = false;
+	if (num1.isNegative != num2.isNegative) {
+		sign = true;
+	}
+	BigInt ans = karatsubaRecursive(num1, num2);
+	ans.isNegative = sign;
+	if (ans.isNull()) {
+		ans.isNegative = false;
+	}
+	return ans;
 }
