@@ -71,6 +71,8 @@ class BSTree {
 		root_ = other.root_;
 		size_ = other.size_;
 		comparator_ = std::move(other.comparator_);
+		other.root_ = nullptr;
+		other.size_ = 0;
 	}
 	BSTree &operator=(const BSTree &other) {
 		if (this != &other) {

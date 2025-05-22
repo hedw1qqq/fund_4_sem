@@ -12,6 +12,30 @@ class MyMapTest : public ::testing::Test {
 	MyMap<int, int, BSTree> map_int_int;
 };
 
+TEST_F(MyMapTest, MapCopyMoveOperations) {
+	map_int_str.insert(1, "one");
+	map_int_str.insert(2, "two");
+
+	MyMap<int, std::string, BSTree> map_copy_ctor(map_int_str);
+	EXPECT_EQ(map_copy_ctor.size(), 2);
+	map_copy_ctor.insert(1, "new_one_copy");
+	EXPECT_EQ(*(map_int_str.find(1)), "one");
+
+	MyMap<int, std::string, BSTree> map_copy_assign;
+	map_copy_assign = map_int_str;
+	EXPECT_EQ(map_copy_assign.size(), 2);
+
+	MyMap<int, std::string, BSTree> map_move_ctor(std::move(map_copy_ctor));
+	EXPECT_EQ(map_move_ctor.size(), 2);
+	ASSERT_NE(map_move_ctor.find(1), nullptr);
+	EXPECT_EQ(*(map_move_ctor.find(1)), "new_one_copy");
+	EXPECT_EQ(map_copy_ctor.size(), 0);
+
+	MyMap<int, std::string, BSTree> map_move_assign;
+	map_move_assign = std::move(map_copy_assign);
+	EXPECT_EQ(map_move_assign.size(), 2);
+	EXPECT_EQ(map_copy_assign.size(), 0);
+}
 TEST(BSTreeDirectTest, ConstructorWithInitialNode) {
 	BSTree<int, std::string> tree(42, "answer");
 	EXPECT_EQ(tree.size(), 1);
