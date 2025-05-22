@@ -22,7 +22,15 @@ class BSTree {
 	size_t size_{};
 	Node *root_{};
 	Comparator comparator_;
-
+	Node *copy_nodes_recursive(Node *other_node) {
+		if (other_node == nullptr) {
+			return nullptr;
+		}
+		Node *new_node = new Node(other_node->key, other_node->value);
+		new_node->left_ = copy_nodes_recursive(other_node->left_);
+		new_node->right_ = copy_nodes_recursive(other_node->right_);
+		return new_node;
+	}
 	void preorder(Node *node, CallBack call_back) {
 		if (node == nullptr) {
 			return;
@@ -53,9 +61,40 @@ class BSTree {
    public:
 	BSTree() = default;
 
-	BSTree(const Key &key, const Value &value) {
+	explicit BSTree(const Key &key, const Value &value) {
 		root_ = new Node(key, value);
 		size_ = 1;
+	}
+	BSTree(const BSTree &other)
+	    : size_(other.size_), root_(copy_nodes_recursive(other.root_)), comparator_(other.comparator_) {}
+	BSTree(BSTree &&other) noexcept {
+		root_ = other.root_;
+		size_ = other.size_;
+		comparator_ = std::move(other.comparator_);
+	}
+	BSTree &operator=(const BSTree &other) {
+		if (this != &other) {
+			clear();
+			root_ = copy_nodes_recursive(other.root_);
+			size_ = other.size_;
+			comparator_ = other.comparator_;
+		}
+		return *this;
+	}
+
+	BSTree &operator=(BSTree &&other) noexcept {
+		if (this == &other) {
+			return *this;
+		}
+		clear();
+
+		root_ = other.root_;
+		size_ = other.size_;
+		comparator_ = std::move(other.comparator_);
+
+		other.root_ = nullptr;
+		other.size_ = 0;
+		return *this;
 	}
 
 	virtual ~BSTree() { clear(); }
@@ -182,9 +221,9 @@ class BSTree {
 		size_--;
 	}
 
-	void preorder_user(CallBack user_cb)  { preorder(root_, user_cb); }
-	void inorder_user(CallBack user_cb)  { inorder(root_, user_cb); }
-	void postorder_user(CallBack user_cb)  { postorder(root_, user_cb); }
+	void preorder_user(CallBack user_cb) { preorder(root_, user_cb); }
+	void inorder_user(CallBack user_cb) { inorder(root_, user_cb); }
+	void postorder_user(CallBack user_cb) { postorder(root_, user_cb); }
 	class iterator {
 	   private:
 		std::stack<Node *> s_;
